@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NASCAR Qualifying Order Projection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --panel: #14181f;
+    --panel-2: #1b212b;
+    --line: #2a313d;
+    --ink: #f4f6fb;
+    --muted: #8b94a6;
+    --accent: #ffd23f;
+    --accent-2: #ff4d2e;
+    --green: #36d27a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background:
+      radial-gradient(900px 500px at 50% -10%, rgba(255,77,46,0.10), transparent 60%),
+      var(--bg);
+    color: var(--ink);
+    font-family: 'Archivo', sans-serif;
+    min-height: 100vh;
+    padding: 28px 16px 60px;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 24px; }
+  .kicker {
+    font-family: 'Oswald', sans-serif;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  h1 {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: clamp(28px, 6vw, 44px);
+    line-height: 1.02;
+    text-transform: uppercase;
+    margin: 6px 0 10px;
+  }
+  .race-line {
+    color: var(--muted);
+    font-size: 15px;
+  }
+  .race-line strong { color: var(--ink); }
+
+  .formula {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin: 22px 0 18px;
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .formula b { color: var(--accent); }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 4px 10px;
+  }
+  .bar h2 {
+    font-family: 'Oswald', sans-serif;
+    font-size: 15px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .toggle {
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-family: 'Archivo', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .toggle:hover { border-color: var(--accent); }
+
+  .row {
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 11px 14px;
+    margin-bottom: 7px;
+  }
+  .row.prime {
+    border-color: rgba(255,210,63,0.55);
+    background: linear-gradient(90deg, rgba(255,210,63,0.10), var(--panel) 55%);
+  }
+  .pos {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--accent);
+    text-align: center;
+  }
+  .row.prime .pos { color: var(--accent); }
+  .name { font-weight: 700; font-size: 16px; }
+  .sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .car {
+    display: inline-block;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1px 6px;
+    font-size: 11px;
+    color: var(--muted);
+    margin-right: 6px;
+    font-weight: 600;
+  }
+  .score {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--ink);
+    text-align: right;
+  }
+  .score small { display: block; font-size: 10px; color: var(--muted); font-weight: 400; letter-spacing: 1px; }
+  .detail { display: none; }
+  .show-detail .detail { display: block; }
+
+  .legend {
+    margin: 18px 4px 0;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .swatch {
+    display: inline-block; width: 11px; height: 11px; border-radius: 3px;
+    background: rgba(255,210,63,0.55); vertical-align: middle; margin-right: 5px;
+  }
+  .disc {
+    margin-top: 20px;
+    padding: 14px 16px;
+    border-left: 3px solid var(--accent-2);
+    background: var(--panel);
+    border-radius: 0 10px 10px 0;
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">Run Order Projection</div>
+    <h1>NASCAR Qualifying Order</h1>
+    <div class="race-line">Next race: <strong>FireKeepers Casino 400</strong> &middot; Michigan Int'l Speedway &middot; Sun June 7, 3:00 PM ET</div>
+  </header>
+
+  <div class="formula">
+    <b>Metric:</b> (owner standings rank &times; 0.30) + (last race finish &times; 0.70).
+    Cars run in <b>reverse</b> order &mdash; worst score qualifies first, best score last (the prime track-condition spot).
+    Based on the <b>Cracker Barrel 400 at Nashville</b> (May 31) finish and points standings through Race 14.
+  </div>
+
+  <div class="bar">
+    <h2 id="count"></h2>
+    <button class="toggle" id="toggleBtn">Show Metric Details</button>
+  </div>
+
+  <div id="list"></div>
+
+  <div class="legend">
+    <span class="swatch"></span>Highlighted rows are the final 5 to qualify &mdash; the cars with the best metric, which typically draw the most favorable track.
+  </div>
+
+  <div class="disc">
+    This is a <b>projection</b>, not the official lineup. It uses the season points standings as a proxy for owner-standings rank (they track closely for full-time entries), and excludes part-time cars without an owner-points position (Corey Heim, Austin Hill, Chad Finchum at Nashville). NASCAR publishes the official run order midweek; small differences are normal. To refresh after the next race, just ask me to update it.
+  </div>
+</div>
+
+<script>
+  // Owner-rank proxy = points standings rank after Nashville (Race 14 of 36)
+  const ownerRank = {
+    "Tyler Reddick":1,"Denny Hamlin":2,"Ryan Blaney":3,"Chase Elliott":4,"Ty Gibbs":5,
+    "Kyle Larson":6,"Christopher Bell":7,"Chris Buescher":8,"Carson Hocevar":9,"Daniel Suarez":10,
+    "William Byron":11,"Brad Keselowski":12,"Shane van Gisbergen":13,"Chase Briscoe":14,"Bubba Wallace":15,
+    "Austin Cindric":16,"Ryan Preece":17,"Joey Logano":18,"Michael McDowell":19,"Zane Smith":20,
+    "Erik Jones":21,"AJ Allmendinger":22,"Ricky Stenhouse Jr.":23,"Austin Dillon":24,"Todd Gilliland":25,
+    "Ross Chastain":26,"Riley Herbst":27,"John Hunter Nemechek":28,"Noah Gragson":29,"Ty Dillon":30,
+    "Josh Berry":31,"Alex Bowman":32,"Cole Custer":33,"Connor Zilisch":34,"Cody Ware":35
+  };
+
+  // Last race finish = 2026 Cracker Barrel 400 at Nashville (May 31)
+  const lastFinish = {
+    "Denny Hamlin":1,"Christopher Bell":2,"Chase Briscoe":3,"Ricky Stenhouse Jr.":4,"Chase Elliott":5,
+    "Tyler Reddick":6,"Shane van Gisbergen":7,"Ryan Blaney":8,"Zane Smith":9,"Carson Hocevar":10,
+    "Erik Jones":11,"Ty Dillon":12,"Ty Gibbs":13,"Joey Logano":14,"Michael McDowell":15,
+    "Noah Gragson":16,"Riley Herbst":17,"Austin Dillon":18,"Daniel Suarez":19,"Todd Gilliland":20,
+    "Cole Custer":21,"Cody Ware":22,"Kyle Larson":23,"John Hunter Nemechek":24,"Austin Cindric":26,
+    "Chris Buescher":29,"William Byron":30,"Josh Berry":31,"Bubba Wallace":32,"Alex Bowman":33,
+    "Brad Keselowski":34,"AJ Allmendinger":35,"Ryan Preece":36,"Ross Chastain":37,"Connor Zilisch":38
+  };
+
+  const car = {
+    "Tyler Reddick":"45","Denny Hamlin":"11","Ryan Blaney":"12","Chase Elliott":"9","Ty Gibbs":"54",
+    "Kyle Larson":"5","Christopher Bell":"20","Chris Buescher":"17","Carson Hocevar":"77","Daniel Suarez":"7",
+    "William Byron":"24","Brad Keselowski":"6","Shane van Gisbergen":"97","Chase Briscoe":"19","Bubba Wallace":"23",
+    "Austin Cindric":"2","Ryan Preece":"60","Joey Logano":"22","Michael McDowell":"71","Zane Smith":"38",
+    "Erik Jones":"43","AJ Allmendinger":"16","Ricky Stenhouse Jr.":"47","Austin Dillon":"3","Todd Gilliland":"34",
+    "Ross Chastain":"1","Riley Herbst":"35","John Hunter Nemechek":"42","Noah Gragson":"4","Ty Dillon":"10",
+    "Josh Berry":"21","Alex Bowman":"48","Cole Custer":"41","Connor Zilisch":"88","Cody Ware":"51"
+  };
+
+  const drivers = Object.keys(ownerRank).map(name => {
+    const score = ownerRank[name] * 0.30 + lastFinish[name] * 0.70;
+    return { name, rank: ownerRank[name], finish: lastFinish[name], car: car[name], score };
+  });
+
+  // Reverse metric order: worst (highest) score qualifies first, best (lowest) last.
+  drivers.sort((a, b) => b.score - a.score || a.rank - b.rank);
+
+  const total = drivers.length;
+  document.getElementById('count').textContent = total + " Cars \u2022 First Out \u2192 Last Out";
+
+  const list = document.getElementById('list');
+  drivers.forEach((d, i) => {
+    const prime = i >= total - 5; // last 5 to qualify
+    const row = document.createElement('div');
+    row.className = 'row' + (prime ? ' prime' : '');
+    row.innerHTML =
+      '<div class="pos">' + (i + 1) + '</div>' +
+      '<div>' +
+        '<div class="name"><span class="car">#' + d.car + '</span>' + d.name + '</div>' +
+        '<div class="sub detail">Owner rank ' + d.rank + ' \u00b7 Nashville finish ' + d.finish + '</div>' +
+      '</div>' +
+      '<div class="score">' + d.score.toFixed(2) + '<small>METRIC</small></div>';
+    list.appendChild(row);
+  });
+
+  const btn = document.getElementById('toggleBtn');
+  btn.addEventListener('click', () => {
+    document.body.classList.toggle('show-detail');
+    btn.textContent = document.body.classList.contains('show-detail')
+      ? 'Hide Metric Details' : 'Show Metric Details';
+  });
+</script>
+</body>
+</html>
