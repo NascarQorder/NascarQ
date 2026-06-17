@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NASCAR Qualifying Order Projection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --panel: #14181f;
+    --panel-2: #1b212b;
+    --line: #2a313d;
+    --ink: #f4f6fb;
+    --muted: #8b94a6;
+    --accent: #ffd23f;
+    --accent-2: #ff4d2e;
+    --green: #36d27a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background:
+      radial-gradient(900px 500px at 50% -10%, rgba(255,77,46,0.10), transparent 60%),
+      var(--bg);
+    color: var(--ink);
+    font-family: 'Archivo', sans-serif;
+    min-height: 100vh;
+    padding: 28px 16px 60px;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 22px; }
+  .kicker {
+    font-family: 'Oswald', sans-serif;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  h1 {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: clamp(28px, 6vw, 44px);
+    line-height: 1.05;
+    margin: 4px 0 2px;
+    text-transform: uppercase;
+  }
+  .sub { color: var(--muted); font-size: 14px; }
+
+  .racebar {
+    background: linear-gradient(135deg, var(--panel-2), var(--panel));
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--accent-2);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+    align-items: baseline;
+  }
+  .racebar .next { font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:2px; color:var(--accent); font-size:12px; width:100%; }
+  .racebar .rname { font-family:'Oswald',sans-serif; font-weight:700; font-size:22px; }
+  .racebar .rmeta { color:var(--muted); font-size:13px; }
+
+  .legend {
+    display:flex; gap:18px; flex-wrap:wrap;
+    font-size:12px; color:var(--muted); margin-bottom:14px; align-items:center;
+  }
+  .legend b { color:var(--ink); font-weight:600; }
+  .toggle {
+    margin-left:auto;
+    background:var(--panel-2); border:1px solid var(--line); color:var(--ink);
+    font-family:'Oswald',sans-serif; letter-spacing:1px; text-transform:uppercase;
+    font-size:12px; padding:8px 14px; border-radius:8px; cursor:pointer;
+  }
+  .toggle:hover { border-color:var(--accent); }
+
+  table { width:100%; border-collapse:collapse; }
+  thead th {
+    font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:1px;
+    font-size:11px; color:var(--muted); text-align:left; padding:0 10px 8px; font-weight:600;
+  }
+  thead th.num { text-align:center; }
+  tbody tr {
+    background:var(--panel);
+    border:1px solid var(--line);
+  }
+  tbody td { padding:11px 10px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); font-size:14px; vertical-align:middle; }
+  tbody td:first-child { border-left:1px solid var(--line); border-radius:9px 0 0 9px; }
+  tbody td:last-child { border-right:1px solid var(--line); border-radius:0 9px 9px 0; }
+  tbody tr + tr td { } /* spacing handled below */
+  tbody tr { }
+  .spacer { height:6px; }
+
+  .ord {
+    font-family:'Oswald',sans-serif; font-weight:700; font-size:18px;
+    text-align:center; color:var(--accent); width:42px;
+  }
+  .car {
+    font-family:'Oswald',sans-serif; font-weight:700; font-size:16px;
+    background:var(--panel-2); border:1px solid var(--line);
+    border-radius:7px; padding:4px 0; text-align:center; min-width:46px; display:inline-block;
+  }
+  .drv { font-weight:700; }
+  .tm { color:var(--muted); font-size:12px; }
+  .det { color:var(--muted); font-size:13px; text-align:center; font-variant-numeric:tabular-nums; }
+  .met { color:var(--green); font-weight:700; text-align:center; font-variant-numeric:tabular-nums; }
+
+  /* qualify-last highlight for the top of the pecking order */
+  tr.best td:first-child { border-left:3px solid var(--accent); }
+
+  .disc {
+    margin-top:18px; color:var(--muted); font-size:12px; line-height:1.6;
+    border-top:1px solid var(--line); padding-top:14px;
+  }
+  .formula {
+    font-family:'Oswald',sans-serif; color:var(--ink); background:var(--panel);
+    border:1px solid var(--line); border-radius:8px; padding:6px 10px; display:inline-block;
+    letter-spacing:1px; font-size:13px; margin:2px 0;
+  }
+  .hide-det .detcol { display:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">NASCAR Cup Series &middot; 2026</div>
+    <h1>Qualifying Run Order</h1>
+    <div class="sub">Projected from the 30 / 70 performance metric</div>
+  </header>
+
+  <div class="racebar">
+    <div class="next">Next Race</div>
+    <div class="rname">Anduril 250</div>
+    <div class="rmeta">Qualcomm Circuit &middot; Naval Base Coronado, San Diego &middot; Sun, June 21, 2026 &middot; 4:00 PM ET (Prime Video)</div>
+  </div>
+
+  <div class="legend">
+    <span><b>Order</b> = sequence cars take the track</span>
+    <span>First out = highest metric &middot; <b>best teams qualify last</b></span>
+    <button class="toggle" id="tog" onclick="toggleDet()">Show metric details</button>
+  </div>
+
+  <table id="tbl" class="hide-det">
+    <thead>
+      <tr>
+        <th class="num">#</th>
+        <th>Car</th>
+        <th>Driver</th>
+        <th class="detcol num">Own</th>
+        <th class="detcol num">Fin</th>
+        <th class="detcol num">Metric</th>
+      </tr>
+    </thead>
+    <tbody id="body"></tbody>
+  </table>
+
+  <div class="disc">
+    <div class="formula">METRIC = (OWNER RANK &times; 0.30) + (LAST RACE FINISH &times; 0.70)</div><br>
+    Inputs: current NASCAR Cup owner standings (entered manually) and the finishing order from the
+    Great American Getaway 400 at Pocono Raceway (June 14, 2026). Lower metric is better; the
+    lowest-metric car runs last in qualifying.<br><br>
+    Heads up: car <b>#67 (Daniel Dye)</b> is a best-guess mapping &mdash; confirm the driver/team and I'll correct it.
+    Austin Hill and Casey Mears ran at Pocono but aren't in the 36-car owner standings, so they're not in this projection.
+    Actual order may shift with the official San Diego entry list.
+  </div>
+</div>
+
+<script>
+const QORDER = [
+  {order:1, car:"4", driver:"Noah Gragson", team:"Front Row Motorsports", own:30, fin:35, metric:33.5},
+  {order:2, car:"38", driver:"Zane Smith", team:"Front Row Motorsports", own:24, fin:37, metric:33.1},
+  {order:3, car:"21", driver:"Josh Berry", team:"Wood Brothers Racing", own:31, fin:33, metric:32.4},
+  {order:4, car:"10", driver:"Ty Dillon", team:"Kaulig Racing", own:32, fin:32, metric:32.0},
+  {order:5, car:"6", driver:"Brad Keselowski", team:"RFK Racing", own:17, fin:38, metric:31.7},
+  {order:6, car:"51", driver:"Cody Ware", team:"Rick Ware Racing", own:35, fin:30, metric:31.5},
+  {order:7, car:"67", driver:"Daniel Dye", team:"? (confirm)", own:36, fin:29, metric:31.1},
+  {order:8, car:"22", driver:"Joey Logano", team:"Team Penske", own:19, fin:34, metric:29.5},
+  {order:9, car:"48", driver:"Alex Bowman", team:"Hendrick Motorsports", own:29, fin:27, metric:27.6},
+  {order:10, car:"41", driver:"Cole Custer", team:"Haas Factory Team", own:33, fin:24, metric:26.7},
+  {order:11, car:"88", driver:"Connor Zilisch", team:"Hendrick Motorsports", own:34, fin:23, metric:26.3},
+  {order:12, car:"97", driver:"Shane van Gisbergen", team:"Trackhouse Racing", own:14, fin:31, metric:25.9},
+  {order:13, car:"3", driver:"Austin Dillon", team:"Richard Childress Racing", own:28, fin:25, metric:25.9},
+  {order:14, car:"60", driver:"Ryan Preece", team:"RFK Racing", own:18, fin:28, metric:25.0},
+  {order:15, car:"16", driver:"AJ Allmendinger", team:"Kaulig Racing", own:21, fin:22, metric:21.7},
+  {order:16, car:"20", driver:"Christopher Bell", team:"Joe Gibbs Racing", own:10, fin:26, metric:21.2},
+  {order:17, car:"34", driver:"Todd Gilliland", team:"Front Row Motorsports", own:25, fin:19, metric:20.8},
+  {order:18, car:"35", driver:"Riley Herbst", team:"23XI Racing", own:27, fin:16, metric:19.3},
+  {order:19, car:"23", driver:"Bubba Wallace", team:"23XI Racing", own:13, fin:21, metric:18.6},
+  {order:20, car:"71", driver:"Michael McDowell", team:"Spire Motorsports", own:20, fin:17, metric:17.9},
+  {order:21, car:"47", driver:"Ricky Stenhouse Jr", team:"Hyak Motorsports", own:22, fin:15, metric:17.1},
+  {order:22, car:"77", driver:"Carson Hocevar", team:"Spire Motorsports", own:9, fin:20, metric:16.7},
+  {order:23, car:"2", driver:"Austin Cindric", team:"Team Penske", own:16, fin:14, metric:14.6},
+  {order:24, car:"1", driver:"Ross Chastain", team:"Trackhouse Racing", own:23, fin:8, metric:12.5},
+  {order:25, car:"19", driver:"Chase Briscoe", team:"Joe Gibbs Racing", own:12, fin:12, metric:12.0},
+  {order:26, car:"7", driver:"Daniel Suarez", team:"Spire Motorsports", own:8, fin:13, metric:11.5},
+  {order:27, car:"42", driver:"John Hunter Nemechek", team:"Legacy Motor Club", own:26, fin:4, metric:10.6},
+  {order:28, car:"9", driver:"Chase Elliott", team:"Hendrick Motorsports", own:4, fin:11, metric:8.9},
+  {order:29, car:"43", driver:"Erik Jones", team:"Legacy Motor Club", own:15, fin:6, metric:8.7},
+  {order:30, car:"12", driver:"Ryan Blaney", team:"Team Penske", own:3, fin:10, metric:7.9},
+  {order:31, car:"54", driver:"Ty Gibbs", team:"Joe Gibbs Racing", own:5, fin:9, metric:7.8},
+  {order:32, car:"17", driver:"Chris Buescher", team:"RFK Racing", own:7, fin:7, metric:7.0},
+  {order:33, car:"24", driver:"William Byron", team:"Hendrick Motorsports", own:11, fin:3, metric:5.4},
+  {order:34, car:"5", driver:"Kyle Larson", team:"Hendrick Motorsports", own:6, fin:5, metric:5.3},
+  {order:35, car:"45", driver:"Tyler Reddick", team:"23XI Racing", own:1, fin:2, metric:1.7},
+  {order:36, car:"11", driver:"Denny Hamlin", team:"Joe Gibbs Racing", own:2, fin:1, metric:1.3},
+];
+
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+function render(){
+  const body = document.getElementById('body');
+  let html = '';
+  QORDER.forEach((r, idx) => {
+    const best = idx >= QORDER.length - 3 ? ' best' : '';
+    html += `<tr class="row${best}">
+      <td class="ord">${r.order}</td>
+      <td><span class="car">${esc(r.car)}</span></td>
+      <td><span class="drv">${esc(r.driver)}</span><br><span class="tm">${esc(r.team)}</span></td>
+      <td class="detcol det">${r.own}</td>
+      <td class="detcol det">${r.fin}</td>
+      <td class="detcol met">${r.metric.toFixed(2)}</td>
+    </tr>
+    <tr class="spacer"><td colspan="6" style="border:none;background:none;padding:0;height:6px;"></td></tr>`;
+  });
+  body.innerHTML = html;
+}
+
+let showDet = false;
+function toggleDet(){
+  showDet = !showDet;
+  document.getElementById('tbl').classList.toggle('hide-det', !showDet);
+  document.getElementById('tog').textContent = showDet ? 'Hide metric details' : 'Show metric details';
+}
+
+render();
+</script>
+</body>
+</html>
